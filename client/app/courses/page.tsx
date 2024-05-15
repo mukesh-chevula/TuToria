@@ -1,7 +1,8 @@
 'use client'
+import React, { useEffect, useState } from 'react'
+import { Suspense } from 'react'
 import { useGetUsersAllCoursesQuery } from '../../redux/features/courses/coursesApi'
 import { useSearchParams } from 'next/navigation'
-import React, { useEffect, useState } from 'react'
 import Loader from '../components/Loader/Loader'
 import Header from '../components/Header'
 import Heading from '../utils/Heading'
@@ -13,30 +14,44 @@ import { useGetHeroDataQuery } from '../../redux/features/layout/layoutApi'
 type Props = {}
 
 const Page = (props: Props) => {
+  const [isLoading, setIsLoading] = useState(true)
+  const [courses, setCourses] = useState<any[]>([]) // Assuming courses have a specific type, replace `any[]` with the correct type
+
+  // Wrap useSearchParams in Suspense
   const searchParams = useSearchParams()
+
+  // Moved other hooks inside Suspense
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <PageContent
+        searchParams={searchParams}
+        setCourses={setCourses}
+        setIsLoading={setIsLoading}
+        courses={courses}
+        isLoading={isLoading}
+      />
+    </Suspense>
+  )
+}
+
+const PageContent = ({ searchParams, setCourses, setIsLoading, courses, isLoading }: any) => {
   const search = searchParams?.get('title')
-  const { data, isLoading } = useGetUsersAllCoursesQuery(undefined, {})
+  const { data, isLoading: coursesLoading } = useGetUsersAllCoursesQuery(undefined, {})
   const { data: categoriesData } = useGetHeroDataQuery('Categories', {})
   const [route, setRoute] = useState('Login')
   const [open, setOpen] = useState(false)
-  const [courses, setcourses] = useState([])
   const [category, setCategory] = useState('All')
 
   useEffect(() => {
-    if (category === 'All') {
-      setcourses(data?.courses)
+    setIsLoading(coursesLoading)
+    if (data && category === 'All') {
+      setCourses(data.courses)
     }
-    if (category !== 'All') {
-      setcourses(
-        data?.courses.filter((item: any) => item.categories === category)
-      )
+    if (data && category !== 'All') {
+      setCourses(data.courses.filter((item: any) => item.categories === category))
     }
     if (search) {
-      setcourses(
-        data?.courses.filter((item: any) =>
-          item.name.toLowerCase().includes(search.toLowerCase())
-        )
-      )
+      setCourses(data.courses.filter((item: any) => item.name.toLowerCase().includes(search.toLowerCase())))
     }
   }, [data, category, search])
 

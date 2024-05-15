@@ -22,7 +22,7 @@ app.use(cookieParser());
 // origin: process.env.ORIGIN,
 app.use(
     cors({
-        origin: ['http://localhost:3000', "https://tutoria-six.vercel.app"],
+        origin: ['http://localhost:3000', "https://tutoria-cbit.vercel.app"],
         credentials: true,
     })
 );
